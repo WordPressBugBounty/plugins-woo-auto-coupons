@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.18
+Version: 3.0.19
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2024 - rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 7.0
 WC tested up to: 9.1
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.18';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.19';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -134,7 +134,8 @@ function wac_adminMenu() {
       $max_qty_ntf=get_option('wac_max_qty_ntf');
       $uninstall=get_option('wac_uninstall');
     }
-
+  
+    if($bulk_apply_future=='on' && function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) wac_bulk_apply(2);
     $install_alert='';
     if(!in_array('woocommerce/woocommerce.php',apply_filters('active_plugins',get_option('active_plugins'))) && !function_exists('wac_get_email'))
       $install_alert.="
@@ -549,7 +550,7 @@ add_action('wp_footer','wac_cart_button');
 
 
 function wac_apply_coupons() {
-  global $woocommerce,$coupon_codes;
+  global $woocommerce,$coupon_codes,$wac_pro_version;
   if(!is_object($woocommerce)) return;
   if(!is_object($woocommerce->cart)) return;
   $cart=$woocommerce->cart;
@@ -561,6 +562,8 @@ function wac_apply_coupons() {
   if(is_object($woocommerce->session) && $woocommerce->session->get('customer')) {$c=$woocommerce->session->get('customer'); if(isset($c['email'])) $cart_email=$c['email'];}
   $coupon_email=get_option('wac_coupon_email');
   if($coupon_email>0 && function_exists('wac_get_email')) $wac_email=wac_get_email();
+  if(get_option('wac_bulk_apply_future')=='on' && function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) $future=wac_bulk_apply(1);
+
   $email_prompt=get_option('wac_email_prompt'); if(empty($email_prompt)) $email_prompt='Verify your email address to check for eligible promotions.';
   $email_err=get_option('wac_email_err'); if(empty($email_err)) $email_err='Email is not associated with any promotions. Try again?';
   $email_dismiss=get_option('wac_email_dismiss'); if(empty($email_dismiss)) $email_dismiss='Are you sure you want to dismiss?';
@@ -893,8 +896,8 @@ function wac_add_coupon_fields() {
 
   $min_qty_ntf=$max_qty_ntf=$bulk_apply_future='';
   if(function_exists('wac_email_prompt')) {
-    $bulk_apply_future=get_option('wac_bulk_apply_future'); 
-    $min_qty_ntf=get_option('wac_min_qty_ntf'); 
+    $bulk_apply_future=get_option('wac_bulk_apply_future');
+    $min_qty_ntf=get_option('wac_min_qty_ntf');
     $max_qty_ntf=get_option('wac_max_qty_ntf');
   } 
   if(empty($min_qty_ntf)) $min_qty_ntf='Add {Qty Diff} more {Product} to qualify for a discount.';
@@ -918,7 +921,7 @@ function wac_add_coupon_fields() {
     <style>.coupon-link{display:block;margin:1em;padding:1em;border-radius:5px;white-space:nowrap;overflow-x:auto;background:#fff}</style>
     <p class='form-field' style='background:#0073aa;margin:1em 0 0'><label style='color:#fff;font-variant-caps:all-small-caps;font-size:1.3em'><span class='dashicons dashicons-admin-settings' style='vertical-align:text-top'></span> Auto Coupons</label></p>";
     echo $alert;
-    woocommerce_wp_checkbox(array('id'=>'_wc_url_apply','label'=> __('Apply via URL','wc-url-apply'),'placeholder'=>'','description'=> __('Allow coupons to be applied with a link.<span class=\'coupon-link\'><b>Add a coupon to cart</b>: /cart/?coupon=<span class=\'cname\'>COUPON_NAME</span>.<br><b>Add a product & coupon</b>: /cart/?add-to-cart=<i>{Product ID or Variation ID}</i>&quantity=1&coupon=<span class=\'cname\'>COUPON_NAME</span><br><span class=\'wac_restr\'>&#9888; <i>If usage restrictions are present, product must be in cart when link is visited.</i></span></span>','wc-url-apply')));
+    woocommerce_wp_checkbox(array('id'=>'_wc_url_apply','label'=> __('Apply via URL','wc-url-apply'),'placeholder'=>'','description'=> __('Allow coupons to be applied with a link.<span class=\'coupon-link\'><b>Add a coupon to cart</b>: /cart/?coupon=<span class=\'cname\'>COUPON_NAME</span>.<br><b>Add a product & coupon</b>: /cart/?add-to-cart=<i>{Product ID or Variation ID}</i>&quantity=1&coupon=<span class=\'cname\'>COUPON_NAME</span><br><span class=\'wac_restr\'>&#9888; <i>If usage restrictions are present, coupon won\'t apply until restrictions are met.</i></span></span>','wc-url-apply')));
     woocommerce_wp_checkbox(array('id'=>'_wc_auto_apply','label'=> __("Auto Apply",'wc-auto-apply'),'placeholder'=>'','desc_tip'=>'true','description'=> __('This setting will apply the coupon to ALL qualifying carts on the cart and checkout page.','wc-auto-apply')));
     woocommerce_wp_text_input(array('id'=>'_wc_prefix','label'=> __('Line Item Name','wc-prefix'),'placeholder'=>'Coupon:','desc_tip'=>'true','description'=> __('Enter a line item name to be shown before the coupon name in cart. e.g. Coupon: ','wc-prefix')));
 

@@ -5,7 +5,7 @@ License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires at least: 4.6
 Tested up to: 6.6
-Stable tag: 3.0.18
+Stable tag: 3.0.19
 
 Apply WooCommerce Coupons automatically with a fast, lightweight plugin. Set minimum product quantities, apply coupons by URL or automatically.
 
@@ -49,6 +49,7 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 4. Troubleshooting mode
 
 == Changelog ==
+= 3.0.19 = * Automate checks for future-auto-apply.
 = 3.0.18 = * Bug fix to cart refresh on update.
 = 3.0.17 = * Bug fix to min items qty in cart.
 = 3.0.16 = * Compatibility with WP 6.6, WC 9.1
