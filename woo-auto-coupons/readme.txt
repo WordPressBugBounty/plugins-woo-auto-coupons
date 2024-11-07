@@ -5,7 +5,7 @@ License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires at least: 4.6
 Tested up to: 6.6
-Stable tag: 3.0.19
+Stable tag: 3.0.20
 
 Apply WooCommerce Coupons automatically with a fast, lightweight plugin. Set minimum product quantities, apply coupons by URL or automatically.
 
@@ -49,6 +49,7 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 4. Troubleshooting mode
 
 == Changelog ==
+= 3.0.20 = * Compatibility with WC 9.3
 = 3.0.19 = * Automate checks for future-auto-apply.
 = 3.0.18 = * Bug fix to cart refresh on update.
 = 3.0.17 = * Bug fix to min items qty in cart.
@@ -118,7 +119,10 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 This plugin works with an unlimited number of coupons.
 
 = Why isn't my coupon auto-applying? =
-The coupon will apply only when conditions are met.  This includes conditions in the WooCommerce coupon settings under Usage Restriction and Usage Limits.  For instance, the coupon expiration date (if set) must be in the future. If a previously auto-applied coupon is manually removed from the cart, it will not auto apply again unless another coupon has been added and removed.
+The coupon will apply only when conditions are met and the coupon has not been previously removed from the cart.  If a previously auto-applied coupon is manually removed from the cart, it will not auto apply again unless another coupon has been added and removed.
+
+= How can I troubleshoot? =
+Visit WooCommerce > Auto Coupons > Status to see troubleshooting options.  This page provides a button to reset the coupon cache, and the 'Troubleshoot' button will output a status for all coupons. You may also test coupons using your browser's private/incognito feature to bypass the cache.
 
 = My cart page name is not '/cart', will the plugin still work? =
 Auto Coupons will work with a non-standard cart page name.  Just open or save any coupon for the change to take effect.
