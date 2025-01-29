@@ -5,7 +5,7 @@ License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires at least: 4.6
 Tested up to: 6.7
-Stable tag: 3.0.21
+Stable tag: 3.0.22
 
 Apply WooCommerce Coupons automatically with a fast, lightweight plugin. Set minimum product quantities, apply coupons by URL or automatically.
 
@@ -49,11 +49,10 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 4. Troubleshooting mode
 
 == Changelog ==
-= 3.0.21 = * Compatibility with WP 6.7, WC 9.4
+= 3.0.22 = * Compatibility with WC 9.6
 = 3.0.19 = * Automate checks for future-auto-apply.
 = 3.0.18 = * Bug fix to cart refresh on update.
 = 3.0.17 = * Bug fix to min items qty in cart.
-= 3.0.16 = * Compatibility with WP 6.6, WC 9.1
 = 3.0.15 = * Compatibility with WC 8.9, Added sanitization to setting tabs.
 = 3.0.14 = * Compatibility checks, additional input sanitization.
 = 3.0.12 = * Minor css improvements.
@@ -61,9 +60,7 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 = 3.0.9 = * Minor setup improvements.
 = 3.0.7 = * Minor bug fixes.
 = 3.0.0 = * Redesigned interface. Improvements to native WC email restriction behavior. Dependencies for future features.
-= 2.4.1 = * Compatibility with WC 8.5. 
 = 2.4.0 = * Compatibility with WC 8.3. Improvements to cart blocks. Removed cache logic for coupon links.
-= 2.3.11 = * Compatibility with WC 8.2 and WP 6.4.
 = 2.3.8 = * Added conditionals to prevent ajax conflict possibilities.
 = 2.3.6 = * Bug fix to session check returning undefined array key 1.
 = 2.3.5 = * Improvement to cart modal processing. Bug fix for nulls passed to unserialize().
@@ -73,11 +70,8 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 = 2.3.1 = * Added troubleshoot button to cart page when logged in as admin. Improvements to triggering with cart URL in any language.
 = 2.2.16 = * Line Item Name, update to allow any language.
 = 2.2.15 = * Add output buffering for coupon notifications.
-= 2.2.14 = * Compatibility with WC 8.0 and WP 6.3.
 = 2.2.12 = * Compatibility with WC 7.9 and WC HPOS.
-= 2.2.11 = * Compatibility with WC 7.8.
 = 2.2.9 = * Allow removal of auto applied coupons in cart.
-= 2.2.8 = * Compatibility with WP 6.2, WC 7.6.
 = 2.2.7 = * Fix to cache and apply coupon code on subsequent page loads when apply via URL is used in combination with ?add-to-cart variable in some environments.
 = 2.2.6 = * Add logic when multiple auto apply coupons are eligible without individual use designation. Prioritize apply via URL over Auto Apply. Improve logic when both apply via URL and auto apply coupons are eligible.
 = 2.2.5 = * Improved language and examples for Apply via URL option. Tweak logic if both apply methods are enabled.
@@ -91,23 +85,13 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 = 2.1.17 = * Bug fix for category restrictions when products not specified.
 = 2.1.15 = * Refined caching behavior for manually removed auto-applied coupons vs auto applied coupons that do not qualify.
 = 2.1.14 = * WC tested up 6.4. Added contraints before converted dates from unix.
-= 2.1.11 = * WP tested up to: 5.9, WC 6.2
-= 2.1.9 = * WC tested up to: 6.1
 = 2.1.7 = * Delete removed coupon cache when coupon no longer qualifies. Cache a coupon when manually removed and still valid.
 = 2.1.6 = * Improved checks for cart page
-= 2.1.5 = * WC tested up to: 5.9
-= 2.1.3 = * WC tested up to: 5.7
 = 2.1.2 = * Removed sessions for compatibility with block editors. Added caching via wac_sess().
 = 2.1 = * Allow manual removal of auto-applied coupon code, and cache preference.
-= 2.0.16 = * Compatibility with WP 5.8.
-= 2.0.15 = * Compatibility with WC 5.5.
 = 2.0.12 = * Fixed bug when counting cart quantities.
-= 2.0.9 = * Compatibility with WC 5.2.
-= 2.0.8 = * Compatibility check for WP 5.7, WC 5.1.
 = 2.0.7 = * Added comma separated product or category names to min quantity requirement verbiage (if specified).
-= 2.0.6 = * Compatibility check for WC 5.0.
 = 2.0.5 = * Only show quantity related notifications in cart.
-= 2.0.3 = * Compatibility check for WC 4.9.
 = 2.0.2 = * Consolidate all styling into one function. Bug fix for echo on line 196.
 = 2.0.1 = * Improvement: Add option to disable cart notifications (e.g. if quantity in cart is less than min quantity of auto-apply coupon).
 = 2.0.0 = * Line item name option in cart. Bug fix to minimum coupon quantity if not restricted to a product. Improvements to troubleshooting coupon min/max quantity. Reduction of js dependencies. Eliminated warnings for unset post vars.  Improved validation on coupon quantities.
