@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.22
+Version: 3.0.23
 Text Domain: woo-auto-coupons
-Copyright: (c) 2019-2024 - rldd.net - All Rights Reserved
+Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 WC requires at least: 8.0
 WC tested up to: 9.6
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.22';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.23';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -107,7 +107,7 @@ function wac_adminMenu() {
 
   function wac_admin() {
     global $wp_version,$wac_version,$wac_pro_version,$wac_version_type;
-    $bulk_apply_future=$bulk_apply_active=$dup_post_type='';
+    $bulk_apply_future=$bulk_url_future=$bulk_apply_active=$dup_post_type='';
     $dup_post=0;
     $get_version=wac_r("SELECT @@version as version;");
     if($get_version) foreach($get_version as $row):$mysql_version=$row->version;endforeach;
@@ -115,6 +115,8 @@ function wac_adminMenu() {
     if(isset($_POST['wac_uninstall']) && check_admin_referer('config_wac','wac_config')) {
       if(isset($_POST['bulk_apply_future'])) $bulk_apply_future=sanitize_text_field($_POST['bulk_apply_future']); update_option('wac_bulk_apply_future',$bulk_apply_future);
       if(isset($_POST['bulk_apply_active'])) $bulk_apply_active=sanitize_text_field($_POST['bulk_apply_active']);
+      if(isset($_POST['bulk_url_future'])) $bulk_url_future=sanitize_text_field($_POST['bulk_url_future']); update_option('wac_bulk_url_future',$bulk_url_future);
+      if(isset($_POST['bulk_url_active'])) $bulk_url_active=sanitize_text_field($_POST['bulk_url_active']);
       if(isset($_POST['dup_post_type'])) $dup_post_type=sanitize_text_field($_POST['dup_post_type']);
       if(isset($_POST['dup_post'])) $dup_post=intval($_POST['dup_post']);
       $coupon_email=intval($_POST['coupon_email']); update_option('wac_coupon_email',$coupon_email);
@@ -126,6 +128,7 @@ function wac_adminMenu() {
       $uninstall=sanitize_text_field($_POST['wac_uninstall']); update_option('wac_uninstall',$uninstall);
     } else {
       $bulk_apply_future=get_option('wac_bulk_apply_future');
+      $bulk_url_future=get_option('wac_bulk_url_future');
       $coupon_email=get_option('wac_coupon_email');
       $email_prompt=get_option('wac_email_prompt');
       $email_err=get_option('wac_email_err');
@@ -134,8 +137,11 @@ function wac_adminMenu() {
       $max_qty_ntf=get_option('wac_max_qty_ntf');
       $uninstall=get_option('wac_uninstall');
     }
-  
-    if($bulk_apply_future=='on' && function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) wac_bulk_apply(2);
+
+    if(function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) {
+      if($bulk_apply_future=='on') wac_bulk_apply(2);
+      if($bulk_url_future=='on') wac_bulk_apply(2,'url');
+    }
     $install_alert='';
     if(!in_array('woocommerce/woocommerce.php',apply_filters('active_plugins',get_option('active_plugins'))) && !function_exists('wac_get_email'))
       $install_alert.="
@@ -278,9 +284,15 @@ function wac_adminMenu() {
               <td>Bulk Updates</td>
               <td class='items'>
                 <div>
-                  <input type='checkbox' <?php if(!empty($bulk_apply_future)) echo 'checked';?> name='bulk_apply_future' onchange="if(this.checked) alert('All coupons created in the future will default to Auto-Apply.');">&nbsp; Default all coupons created in the <b>future</b> to Auto Apply.<br>
-                  <input type='checkbox' name='bulk_apply_active' onchange="if(this.checked) alert('ALL active coupons will be updated to Auto-Apply upon saving this form.');">&nbsp; Update all <b>currently active</b> coupons to Auto Apply.<br>
+                  <input type='checkbox' <?php if(!empty($bulk_apply_future)) echo 'checked';?> name='bulk_apply_future' onchange="if(this.checked) alert('All coupons created in the future will default to Auto-Apply.');">&nbsp; Default all coupons created in the <b>future</b> to <b>Auto Apply</b>.<br>
+                  <input type='checkbox' name='bulk_apply_active' onchange="if(this.checked) alert('ALL active coupons will be updated to Auto-Apply upon saving this form.');">&nbsp; Update all <b>currently active</b> coupons to <b>Auto Apply</b>.<br>
                   <?php if(!empty($bulk_apply_active) && function_exists('wac_bulk_apply')) echo wac_bulk_apply();?>
+                </div>
+                
+                <div>
+                  <input type='checkbox' <?php if(!empty($bulk_url_future)) echo 'checked';?> name='bulk_url_future' onchange="if(this.checked) alert('All coupons created in the future will default to Apply via URL.');">&nbsp; Default all coupons created in the <b>future</b> to <b>Apply via URL</b>.<br>
+                  <input type='checkbox' name='bulk_url_active' onchange="if(this.checked) alert('ALL active coupons will be updated to Apply via URL upon saving this form.');">&nbsp; Update all <b>currently active</b> coupons to <b>Apply via URL</b>.<br>
+                  <?php if(!empty($bulk_url_active) && function_exists('wac_bulk_apply')) echo wac_bulk_apply(0,'url');?>
                 </div>
               </td>
             </tr>
@@ -382,6 +394,7 @@ function wac_adminMenu() {
                   Auto count: <?php echo wac_ct_coupons($coupons,'auto');?><br>
                   URL count: <?php echo wac_ct_coupons($coupons,'url');?><br>
                   Auto Future: <?php echo $bulk_apply_future;?><br>
+                  URL Future: <?php echo $bulk_url_future;?><br>
                   Prompt Type: <?php echo $coupon_email;?><br>
                   Email Prompt: <?php echo $email_prompt;?><br>
                   Email Error: <?php echo $email_err;?><br>
@@ -562,7 +575,10 @@ function wac_apply_coupons() {
   if(is_object($woocommerce->session) && $woocommerce->session->get('customer')) {$c=$woocommerce->session->get('customer'); if(isset($c['email'])) $cart_email=$c['email'];}
   $coupon_email=get_option('wac_coupon_email');
   if($coupon_email>0 && function_exists('wac_get_email')) $wac_email=wac_get_email();
-  if(get_option('wac_bulk_apply_future')=='on' && function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) $future=wac_bulk_apply(1);
+  if(function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) {
+    if(get_option('wac_bulk_apply_future')=='on') $future=wac_bulk_apply(1);
+    if(get_option('wac_bulk_url_future')=='on') $future=wac_bulk_apply(1,'url');
+  }
 
   $email_prompt=get_option('wac_email_prompt'); if(empty($email_prompt)) $email_prompt='Verify your email address to check for eligible promotions.';
   $email_err=get_option('wac_email_err'); if(empty($email_err)) $email_err='Email is not associated with any promotions. Try again?';
@@ -894,9 +910,10 @@ function wac_add_coupon_fields() {
 
   if(isset($_GET['post']))$post_id=intval($_GET['post']); else $post_id=0;
 
-  $min_qty_ntf=$max_qty_ntf=$bulk_apply_future='';
+  $min_qty_ntf=$max_qty_ntf=$bulk_apply_future=$bulk_url_future='';
   if(function_exists('wac_email_prompt')) {
     $bulk_apply_future=get_option('wac_bulk_apply_future');
+    $bulk_url_future=get_option('wac_bulk_url_future');
     $min_qty_ntf=get_option('wac_min_qty_ntf');
     $max_qty_ntf=get_option('wac_max_qty_ntf');
   } 
@@ -986,7 +1003,9 @@ function wac_add_coupon_fields() {
       var ctitle=wac_getE('title').value;
       if(ctitle.length==0) {
         var baf='$bulk_apply_future';
+        var buf='$bulk_url_future';
         if(baf.length>0) wac_getE('_wc_auto_apply').checked=true;
+        if(buf.length>0) wac_getE('_wc_url_apply').checked=true;
       }
     }
     wac_bulk_apply_future();
