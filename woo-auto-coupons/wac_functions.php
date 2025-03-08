@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.23
+Version: 3.0.24
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 WC requires at least: 8.0
-WC tested up to: 9.6
+WC tested up to: 9.7
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.23';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.24';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
