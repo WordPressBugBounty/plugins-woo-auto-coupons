@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.24
+Version: 3.0.25
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 8.0
 WC tested up to: 9.7
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.24';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.25';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -159,27 +159,30 @@ function wac_adminMenu() {
       </div>";
     }
 
+    $now=current_time('mysql');
     $coupons=wac_r("
       SELECT *
         FROM (
-        SELECT p.ID post_id,post_title coupon_code 
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='individual_use' LIMIT 1)individual
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='coupon_amount' LIMIT 1)coupon_amount
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='customer_email' LIMIT 1)c_email
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_min_qty' LIMIT 1)min_qty
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_max_qty' LIMIT 1)max_qty
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_min_qty_ntf' LIMIT 1)min_qty_ntf
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_max_qty_ntf' LIMIT 1)max_qty_ntf
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_auto_apply' AND meta_value='yes' ORDER BY meta_key LIMIT 1)auto_apply
-        ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_url_apply' AND meta_value='yes' ORDER BY meta_key LIMIT 1)url_apply
+        SELECT p.ID post_id,post_title coupon_code
+        ,MAX(CASE WHEN pm.meta_key='individual_use' THEN pm.meta_value END)individual
+        ,MAX(CASE WHEN pm.meta_key='coupon_amount' THEN pm.meta_value END)coupon_amount
+        ,MAX(CASE WHEN pm.meta_key='customer_email' THEN pm.meta_value END)c_email
+        ,MAX(CASE WHEN pm.meta_key='_wc_min_qty' THEN pm.meta_value END)min_qty
+        ,MAX(CASE WHEN pm.meta_key='_wc_max_qty' THEN pm.meta_value END)max_qty
+        ,MAX(CASE WHEN pm.meta_key='_wc_min_qty_ntf' THEN pm.meta_value END)min_qty_ntf
+        ,MAX(CASE WHEN pm.meta_key='_wc_max_qty_ntf' THEN pm.meta_value END)max_qty_ntf
+        ,MAX(CASE WHEN pm.meta_key='_wc_auto_apply' AND pm.meta_value='yes' THEN pm.meta_value END)auto_apply
+        ,MAX(CASE WHEN pm.meta_key='_wc_url_apply' AND pm.meta_value='yes' THEN pm.meta_value END)url_apply
         ,DATE_FORMAT(FROM_UNIXTIME(x.meta_value),'%m-%d-%Y')exp_date
-        ,CASE WHEN FROM_UNIXTIME(x.meta_value)<NOW() THEN 1 ELSE 0 END exp
+        ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
         FROM wp_posts p
         LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
+        LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID
         WHERE post_type='shop_coupon'
         AND post_status='publish'
-        AND IFNULL(FROM_UNIXTIME(NULLIF(x.meta_value,'')),NOW())>=NOW()
+        GROUP BY p.ID
       )a
+      WHERE exp=0
       ORDER BY coupon_code;");
 
       function wac_ct_coupons($coupons,$type) {
@@ -591,41 +594,45 @@ function wac_apply_coupons() {
 
   $coupon=wac_cache_coupon();
   if(!empty($coupon)) $req.=" AND post_title='$coupon'";
+  $now=current_time('mysql');
 
   if($trb<1) {
     $req2.=" WHERE(individual='yes' OR apply IS NOT NULL OR c_email IS NOT NULL)";
-    $req.=" AND IFNULL(FROM_UNIXTIME(NULLIF(x.meta_value,'')),NOW())>=NOW()";
+    $req.=" AND exp=0";
   }
 
   $coupons=wac_r("
     SELECT *
     -- ,(SELECT GROUP_CONCAT(DISTINCT post_title) FROM wp_posts WHERE FIND_IN_SET(ID,product_ids)>0)product
       FROM (
-      SELECT p.ID post_id,post_title coupon_code 
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='product_ids' LIMIT 1)product_ids
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='exclude_product_ids')exc_prds
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='product_categories')cats
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='exclude_product_categories')exc_cats
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='individual_use' LIMIT 1)individual
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='coupon_amount' LIMIT 1)coupon_amount
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='customer_email' LIMIT 1)c_email
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_min_qty' LIMIT 1)min_qty
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_max_qty' LIMIT 1)max_qty
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_qty_ntf' LIMIT 1)qty_ntf
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_min_qty_ntf' LIMIT 1)min_qty_ntf
-      ,(SELECT meta_value FROM wp_postmeta WHERE post_id=p.ID AND meta_key='_wc_max_qty_ntf' LIMIT 1)max_qty_ntf
-      ,(SELECT meta_key FROM wp_postmeta WHERE post_id=p.ID AND meta_key LIKE '$meta' AND meta_value='yes' ORDER BY meta_key LIMIT 1)apply
+      SELECT p.ID post_id,post_title coupon_code
+      ,MAX(CASE WHEN pm.meta_key='product_ids' THEN pm.meta_value END)product_ids
+      ,MAX(CASE WHEN pm.meta_key='exclude_product_ids' THEN pm.meta_value END)exc_prds
+      ,MAX(CASE WHEN pm.meta_key='product_categories' THEN pm.meta_value END)cats
+      ,MAX(CASE WHEN pm.meta_key='exclude_product_categories' THEN pm.meta_value END)exc_cats
+      ,MAX(CASE WHEN pm.meta_key='individual_use' THEN pm.meta_value END)individual
+      ,MAX(CASE WHEN pm.meta_key='coupon_amount' THEN pm.meta_value END)coupon_amount
+      ,MAX(CASE WHEN pm.meta_key='customer_email' THEN pm.meta_value END)c_email
+      ,MAX(CASE WHEN pm.meta_key='_wc_min_qty' THEN pm.meta_value END)min_qty
+      ,MAX(CASE WHEN pm.meta_key='_wc_max_qty' THEN pm.meta_value END)max_qty
+      ,MAX(CASE WHEN pm.meta_key='_wc_qty_ntf' THEN pm.meta_value END)qty_ntf
+      ,MAX(CASE WHEN pm.meta_key='_wc_min_qty_ntf' THEN pm.meta_value END)min_qty_ntf
+      ,MAX(CASE WHEN pm.meta_key='_wc_max_qty_ntf' THEN pm.meta_value END)max_qty_ntf
+      ,MAX(CASE WHEN pm.meta_key LIKE '$meta' AND pm.meta_value='yes' THEN pm.meta_key END)apply
       ,DATE_FORMAT(FROM_UNIXTIME(x.meta_value),'%m-%d-%Y')exp_date
-      ,CASE WHEN FROM_UNIXTIME(x.meta_value)<NOW() THEN 1 ELSE 0 END exp
+      ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
       FROM wp_posts p
       LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
+      LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID
       WHERE post_type='shop_coupon'
       AND post_status='publish'
-      $req
+      GROUP BY p.ID
     )a
     $req2
+    $req
     ORDER BY individual DESC,exp,CAST(coupon_amount AS SIGNED) DESC;");
-  if(!$coupons) return; 
+  if(!$coupons)return;
+
 
   $user_removed_coupon=wac_get_removed_coupon();
   foreach($cart->cart_contents as $cart_item_key=>$cart_item) $cart_items++;
