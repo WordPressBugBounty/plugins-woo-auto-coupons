@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.25
+Version: 3.0.26
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 8.0
 WC tested up to: 9.7
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.25';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.26';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -593,11 +593,11 @@ function wac_apply_coupons() {
   if(isset($_GET['wac_trb']) && current_user_can('administrator') && !wp_doing_ajax()) $trb=1; else $trb=0;
 
   $coupon=wac_cache_coupon();
-  if(!empty($coupon)) $req.=" AND post_title='$coupon'";
+  if(!empty($coupon)) $req.=" AND coupon_code='$coupon'";
   $now=current_time('mysql');
 
   if($trb<1) {
-    $req2.=" WHERE(individual='yes' OR apply IS NOT NULL OR c_email IS NOT NULL)";
+    $req2.=" AND(individual='yes' OR apply IS NOT NULL OR c_email IS NOT NULL)";
     $req.=" AND exp=0";
   }
 
@@ -628,6 +628,7 @@ function wac_apply_coupons() {
       AND post_status='publish'
       GROUP BY p.ID
     )a
+    WHERE 1=1
     $req2
     $req
     ORDER BY individual DESC,exp,CAST(coupon_amount AS SIGNED) DESC;");
