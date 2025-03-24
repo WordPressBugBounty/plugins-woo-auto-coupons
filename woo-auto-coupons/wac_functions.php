@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.28
+Version: 3.0.29
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 8.0
 WC tested up to: 9.7
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.28';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.29';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -620,7 +620,7 @@ function wac_apply_coupons() {
       ,MAX(CASE WHEN pm.meta_key='_wc_qty_ntf' THEN pm.meta_value END)qty_ntf
       ,MAX(CASE WHEN pm.meta_key='_wc_min_qty_ntf' THEN pm.meta_value END)min_qty_ntf
       ,MAX(CASE WHEN pm.meta_key='_wc_max_qty_ntf' THEN pm.meta_value END)max_qty_ntf
-      ,MAX(CASE WHEN pm.meta_key LIKE '$meta' AND pm.meta_value='yes' THEN pm.meta_key END)apply
+      ,MIN(CASE WHEN pm.meta_key LIKE '$meta' AND pm.meta_value='yes' THEN pm.meta_key END)apply
       ,DATE_FORMAT(FROM_UNIXTIME(x.meta_value),'%m-%d-%Y')exp_date
       ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
       FROM wp_posts p
