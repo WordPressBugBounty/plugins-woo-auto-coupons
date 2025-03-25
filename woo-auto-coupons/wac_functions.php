@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.29
+Version: 3.0.30
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 8.0
 WC tested up to: 9.7
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.29';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.30';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -86,10 +86,13 @@ function wac_in_like($n,$h) {
 }
 
 function wac_unsr($d) {
-  if(empty($d)) return '';
-  $d=trim($d);
-  if(substr($d,0,2)=='a:'){$res=unserialize($d);return $res===false ? '':$res;}
-  return '';
+  if(!empty($d)) {
+    if(is_array($d)) return $d;
+    if(strpos($d,':')!== false) return unserialize($d);
+    if(strpos($d,',')!==false) return explode(',',$d);
+    return array($d);
+  }
+  else return '';
 }
 
 // Path Comparison
@@ -647,7 +650,7 @@ function wac_apply_coupons() {
     $applied=0;
     $coupon_code=ucwords($c->coupon_code);
     $reason=$individual_use=$apply_type='';
-    if($c->product_ids>0 || !empty($c->cats) || !empty($c->exc_cats)) $qty_in_cart=wac_qty_in_cart($c->product_ids,$c->exc_prds,wac_unsr($c->cats),wac_unsr($c->exc_cats)); else $qty_in_cart=$cart_qty;
+    if($c->product_ids>0 || !empty($c->cats) || !empty($c->exc_cats)) $qty_in_cart=wac_qty_in_cart($c->product_ids,wac_unsr($c->exc_prds),wac_unsr($c->cats),wac_unsr($c->exc_cats)); else $qty_in_cart=$cart_qty;
 
     $wc_qty_ntf=wac_unsr($c->qty_ntf);
     if(empty($wc_qty_ntf)) $wc_qty_ntf=array(1,-1);
