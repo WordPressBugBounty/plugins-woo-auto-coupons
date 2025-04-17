@@ -4,8 +4,8 @@ Tags: woocommerce, coupons, auto apply, discount, duplicate
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires at least: 4.6
-Tested up to: 6.7
-Stable tag: 3.0.30
+Tested up to: 6.8
+Stable tag: 3.0.31
 
 Apply WooCommerce Coupons automatically with a fast, lightweight plugin. Set minimum product quantities, apply coupons by URL or automatically.
 
@@ -49,6 +49,7 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 4. Troubleshooting mode
 
 == Changelog ==
+= 3.0.31 = * Compatibility with WC 9.8, WP 6.8
 = 3.0.30 = * Bug fix to unserialize restrictions
 = 3.0.29 = * Bug fix to SQL case stmt
 = 3.0.26 = * Coupon Query optimization.
@@ -56,48 +57,13 @@ Apply WooCommerce Coupons automatically with a simple, fast and lightweight plug
 = 3.0.19 = * Automate checks for future-auto-apply.
 = 3.0.18 = * Bug fix to cart refresh on update.
 = 3.0.17 = * Bug fix to min items qty in cart.
-= 3.0.15 = * Compatibility with WC 8.9, Added sanitization to setting tabs.
+= 3.0.15 = * Added sanitization to setting tabs.
 = 3.0.14 = * Compatibility checks, additional input sanitization.
 = 3.0.12 = * Minor css improvements.
 = 3.0.11 = * Bug fix to admin cache-clear.
 = 3.0.9 = * Minor setup improvements.
 = 3.0.7 = * Minor bug fixes.
 = 3.0.0 = * Redesigned interface. Improvements to native WC email restriction behavior. Dependencies for future features.
-= 2.4.0 = * Compatibility with WC 8.3. Improvements to cart blocks. Removed cache logic for coupon links.
-= 2.3.8 = * Added conditionals to prevent ajax conflict possibilities.
-= 2.3.6 = * Bug fix to session check returning undefined array key 1.
-= 2.3.5 = * Improvement to cart modal processing. Bug fix for nulls passed to unserialize().
-= 2.3.4 = * Improvement to line item persistency when cart is reloaded by ajax
-= 2.3.3 = * Bug fix where coupon code line items contains in-line styling. Improvements to triggering with cart URL in any language.
-= 2.3.2 = * Moved Coupon Status button (formerly troubleshoot button) to admin bar on cart page.
-= 2.3.1 = * Added troubleshoot button to cart page when logged in as admin. Improvements to triggering with cart URL in any language.
-= 2.2.16 = * Line Item Name, update to allow any language.
-= 2.2.15 = * Add output buffering for coupon notifications.
-= 2.2.12 = * Compatibility with WC 7.9 and WC HPOS.
-= 2.2.9 = * Allow removal of auto applied coupons in cart.
-= 2.2.7 = * Fix to cache and apply coupon code on subsequent page loads when apply via URL is used in combination with ?add-to-cart variable in some environments.
-= 2.2.6 = * Add logic when multiple auto apply coupons are eligible without individual use designation. Prioritize apply via URL over Auto Apply. Improve logic when both apply via URL and auto apply coupons are eligible.
-= 2.2.5 = * Improved language and examples for Apply via URL option. Tweak logic if both apply methods are enabled.
-= 2.2.4 = * Bug fix for cart count when $woocommerce variable not set.
-= 2.2.3 = * Potential fix for wp-db bug for WP<6.1.1.
-= 2.2.2 = * WC Custom orders table compatibility check.
-= 2.2.1 = * WooCommerce Blocks compatibility. Update db dependency from wp-db.php to class-wpdb.php. 
-= 2.1.20 = * Custom quantity notifications fix for some scenarios.
-= 2.1.19 = * Allow custom quantity notifications in cart. Support for variables.
-= 2.1.18 = * Fix around UNIXTIME nulls in MySQL 8 - thanks @mattiamaragno!
-= 2.1.17 = * Bug fix for category restrictions when products not specified.
-= 2.1.15 = * Refined caching behavior for manually removed auto-applied coupons vs auto applied coupons that do not qualify.
-= 2.1.14 = * WC tested up 6.4. Added contraints before converted dates from unix.
-= 2.1.7 = * Delete removed coupon cache when coupon no longer qualifies. Cache a coupon when manually removed and still valid.
-= 2.1.6 = * Improved checks for cart page
-= 2.1.2 = * Removed sessions for compatibility with block editors. Added caching via wac_sess().
-= 2.1 = * Allow manual removal of auto-applied coupon code, and cache preference.
-= 2.0.12 = * Fixed bug when counting cart quantities.
-= 2.0.7 = * Added comma separated product or category names to min quantity requirement verbiage (if specified).
-= 2.0.5 = * Only show quantity related notifications in cart.
-= 2.0.2 = * Consolidate all styling into one function. Bug fix for echo on line 196.
-= 2.0.1 = * Improvement: Add option to disable cart notifications (e.g. if quantity in cart is less than min quantity of auto-apply coupon).
-= 2.0.0 = * Line item name option in cart. Bug fix to minimum coupon quantity if not restricted to a product. Improvements to troubleshooting coupon min/max quantity. Reduction of js dependencies. Eliminated warnings for unset post vars.  Improved validation on coupon quantities.
 
 
 == Frequently Asked Questions ==
