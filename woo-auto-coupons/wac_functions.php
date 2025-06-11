@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.31
+Version: 3.0.32
 Text Domain: woo-auto-coupons
-Copyright: (c) 2019-2025 - rldd.net - All Rights Reserved
+Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
-WC requires at least: 8.0
-WC tested up to: 9.8
+WC requires at least: 9.0
+WC tested up to: 9.9
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.31';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.32';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -663,7 +663,7 @@ function wac_apply_coupons() {
     if(!empty($apply_indv)) {$valid=0; $reason.=" Individual use coupon [$apply_indv] has already been applied."; if($trb<1) continue;}
     if($c->exp>0) {$valid=0; $reason.=" Expired {$c->exp_date}."; if($trb<1) continue;}
     if(!empty($c->product_ids) && $qty_in_cart<1 && empty($coupon)) {$valid=0; $reason.=' No qualifying cart items.'; if($trb<1) continue;}
-    if(wac_in(strtolower($coupon_code),$cart->applied_coupons)) $applied=1;
+    if(wac_in(strtolower($coupon_code),$cart->applied_coupons) || $woocommerce->cart->has_discount($c->coupon_code)) $applied=1;
     if($cart_items==0 && empty($coupon)) {$valid=0; $reason.=' No Items in Cart.'; if($trb<1) continue;}
 
     if($valid>0 && ($c->min_qty>0 || $c->max_qty>0)) { // Check Qty
