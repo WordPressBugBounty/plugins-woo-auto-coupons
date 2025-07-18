@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.32
+Version: 3.0.33
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 9.9
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.32';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.33';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -183,6 +183,8 @@ function wac_adminMenu() {
         FROM wp_posts p
         LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
         LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID
+				AND (pm.meta_key IN ('product_ids','exclude_product_ids','product_categories','exclude_product_categories','individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_qty_ntf','_wc_min_qty_ntf','_wc_max_qty_ntf')
+				OR pm.meta_key LIKE '_wc_%_apply')
         WHERE post_type='shop_coupon'
         AND post_status='publish'
         GROUP BY p.ID
@@ -628,7 +630,9 @@ function wac_apply_coupons() {
       ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
       FROM wp_posts p
       LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
-      LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID
+      LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID 
+      AND (pm.meta_key IN ('product_ids','exclude_product_ids','product_categories','exclude_product_categories','individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_qty_ntf','_wc_min_qty_ntf','_wc_max_qty_ntf')
+      OR pm.meta_key LIKE '_wc_%_apply')
       WHERE post_type='shop_coupon'
       AND post_status='publish'
       GROUP BY p.ID
