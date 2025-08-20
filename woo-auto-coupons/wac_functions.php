@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.33
+Version: 3.0.35
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 9.9
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.33';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.35';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -799,7 +799,7 @@ else {
   add_action('woocommerce_cart_item_restored', 'wac_apply_coupons'); // Ajax Item Restored
 }
 
-function wac_refresh_on_quantity_change(){if(function_exists('is_cart')) if(is_cart()||is_checkout()){echo "<script>jQuery(document.body).on('updated_cart_totals',function(){if(jQuery('.quantity input').length){location.reload();}});</script>";}}
+function wac_refresh_on_quantity_change(){if(function_exists('is_cart')) if(is_cart()||is_checkout()){echo "<script>jQuery(document.body).on('updated_cart_totals',function(){if(jQuery('.quantity input').length){var u=new URL(location.href);if(u.searchParams.has('add-to-cart')){u.searchParams.delete('add-to-cart');u.searchParams.delete('quantity');location.replace(u.toString());}else location.reload();}});</script>";}}
 add_action('wp_footer','wac_refresh_on_quantity_change');
 
 
