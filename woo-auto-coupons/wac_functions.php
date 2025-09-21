@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.36
+Version: 3.0.37
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.1
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.36';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.37';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -753,15 +753,15 @@ function wac_apply_coupons() {
       if($cart_qty==0) wac_cache_coupon($coupon);
       $apply_type='';
       if(!empty($individual_use)) $apply_indv=$coupon_code; 
-      if($c->apply=='_wc_auto_apply') {
-        $apply_type=' Auto-';
-        array_push($coupon_codes,$coupon_code); // Style line item
-      }
+      if($c->apply=='_wc_auto_apply') $apply_type=' Auto-';
+      if($c->apply=='_wc_auto_apply' || stripos($c->apply,'url')!==false) array_push($coupon_codes,$coupon_code); // Style line item
       if($trb>0) $reason.="{$apply_type}Applied successfully $individual_use";
-    } elseif($valid>0 && $trb>0) {
-      $apply_type=' via manual entry';
-      if(stripos($c->apply,'url')!==false) $apply_type.=' or URL';
-      if($trb>0) $reason.="Eligible $apply_type. $individual_use";
+    } elseif($valid>0) {
+      if(stripos($c->apply,'url')!==false) {$apply_type.=' or URL'; array_push($coupon_codes,$coupon_code);} // Style line item
+      if($trb>0) {
+		  $apply_type=' via manual entry';
+		  $reason.="Eligible $apply_type. $individual_use";
+      }
     }
 
     if($valid<1 && $applied>0 && stripos($reason,'Manual')===false) $woocommerce->cart->remove_coupon($coupon_code); // Remove From Cart
@@ -860,7 +860,7 @@ function wac_style_coupons() {
   foreach($coupon_codes as $coupon_code) {
     $p=wac_r("
       SELECT post_title coupon_code, p.meta_value prefix
-      ,(SELECT 1 FROM wp_postmeta WHERE post_id=c.ID AND meta_key='_wc_auto_apply' AND meta_value='yes' LIMIT 1)auto_apply
+      ,(SELECT 1 FROM wp_postmeta WHERE post_id=c.ID AND meta_key LIKE '_wc_%_apply' AND meta_value='yes' LIMIT 1)auto_apply
       FROM wp_posts c
       JOIN wp_postmeta p ON p.post_id=c.ID AND p.meta_key='_wc_prefix'
       WHERE post_type='shop_coupon'
@@ -1049,12 +1049,12 @@ function wac_add_coupon_fields() {
         wcmn.value=wcmx.value='';
         document.getElementsByClassName('_wc_qty')[0].style.visibility='hidden';
       }
+      document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='hidden';
       if(wcua.checked || wcaa.checked) {
-        document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='visible';
+        if(wac_getE('_wc_prefix').value.length>0) document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='visible';
         wac_getE('_wc_prefix').setAttribute('list','wc_prefix');
         wac_getE('_wc_prefix').setAttribute('type','search');
       }
-      else document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='hidden';
     }
     wac_dsp_options();
     
