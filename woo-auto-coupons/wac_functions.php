@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.38
+Version: 3.0.39
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.1
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.38';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.39';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -133,6 +133,7 @@ function wac_adminMenu() {
       $min_qty_ntf=sanitize_text_field($_POST['min_qty_ntf']); update_option('wac_min_qty_ntf',$min_qty_ntf);
       $max_qty_ntf=sanitize_text_field($_POST['max_qty_ntf']); update_option('wac_max_qty_ntf',$max_qty_ntf);
       $uninstall=sanitize_text_field($_POST['wac_uninstall']); update_option('wac_uninstall',$uninstall);
+      $sc_cart=sanitize_text_field($_POST['sc_cart']); update_option('wac_sc_cart',$sc_cart);
     } else {
       $bulk_apply_future=get_option('wac_bulk_apply_future');
       $bulk_url_future=get_option('wac_bulk_url_future');
@@ -143,6 +144,7 @@ function wac_adminMenu() {
       $min_qty_ntf=get_option('wac_min_qty_ntf');
       $max_qty_ntf=get_option('wac_max_qty_ntf');
       $uninstall=get_option('wac_uninstall');
+      $sc_cart=get_option('wac_sc_cart');
     }
 
     if(function_exists('wac_bulk_apply') && version_compare($wac_pro_version,'1.1','>=')>0) {
@@ -292,6 +294,13 @@ function wac_adminMenu() {
               </td>
             </tr>
 
+            <tr class='status'>
+              <td>Optimize for older shortcode (non-block) cart/checkout</td>
+              <td>
+				<input type="checkbox" name="sc_cart" <?php if(!empty($sc_cart)) echo 'checked';?> class="checkbox">
+              </td>
+            </tr>
+
             <tr class='options'>
               <td>Bulk Updates</td>
               <td class='items'>
@@ -414,6 +423,7 @@ function wac_adminMenu() {
                   Min Default: <?php echo $min_qty_ntf;?><br>
                   Max Default: <?php echo $max_qty_ntf;?><br>
                   Uninstall: <?php if(empty($uninstall)) echo 'keep'; else echo $uninstall;?><br>
+                  Shortcode Cart: <?php if(!empty($sc_cart)) echo 'yes';?><br>
                 </div>
       
                 <?php if(!function_exists('wac_get_email')) { ?>
@@ -860,7 +870,8 @@ function wac_clear_cache() {
 function wac_style_coupons() {
   global $coupon_codes;
   if(empty($coupon_codes)) return;
-  foreach($coupon_codes as $coupon_code) {
+  $sc_cart=get_option('wac_sc_cart');
+  if(!empty($sc_cart)) foreach($coupon_codes as $coupon_code) {
     $p=wac_r("
       SELECT post_title coupon_code, p.meta_value prefix
       ,(SELECT 1 FROM wp_postmeta WHERE post_id=c.ID AND meta_key LIKE '_wc_%_apply' AND meta_value='yes' LIMIT 1)auto_apply
@@ -931,6 +942,8 @@ function wac_add_coupon_fields() {
   if(isset($_GET['post']))$post_id=intval($_GET['post']); else $post_id=0;
 
   $min_qty_ntf=$max_qty_ntf=$bulk_apply_future=$bulk_url_future='';
+  $sc_cart=get_option('wac_sc_cart');
+  
   if(function_exists('wac_email_prompt')) {
     $bulk_apply_future=get_option('wac_bulk_apply_future');
     $bulk_url_future=get_option('wac_bulk_url_future');
@@ -1053,8 +1066,8 @@ function wac_add_coupon_fields() {
         document.getElementsByClassName('_wc_qty')[0].style.visibility='hidden';
       }
       document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='hidden';
-      if(wcua.checked || wcaa.checked) {
-        if(wac_getE('_wc_prefix').value.length>0) document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='visible';
+      if('$sc_cart'.length>0 && (wcua.checked || wcaa.checked)) {
+        document.getElementsByClassName('_wc_prefix_field')[0].style.visibility='visible';
         wac_getE('_wc_prefix').setAttribute('list','wc_prefix');
         wac_getE('_wc_prefix').setAttribute('type','search');
       }
