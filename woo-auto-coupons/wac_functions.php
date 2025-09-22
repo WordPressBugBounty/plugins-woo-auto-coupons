@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.37
+Version: 3.0.38
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.1
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.37';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.38';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -103,7 +103,9 @@ function wac_is_path($pages) {
     $check_cart=get_option('wac_cart_page'); if(!empty($check_cart)) $pages=$check_cart;
     else {$check_cart=get_option('wac_checkout_page'); if(!empty($check_cart)) $pages=$check_cart;}
   }
-  $page=strtolower($_SERVER['REQUEST_URI']);
+  $page='';
+  if(isset($_SERVER['REQUEST_URI'])) $page=strtolower($_SERVER['REQUEST_URI']);
+  if($page==='')return false;
   return wac_in_like($page,$pages);
 }
 
@@ -392,7 +394,7 @@ function wac_adminMenu() {
 
                 <div id='wac_diag' style='display:none;background:#fff;padding:1em;font-size:.9em'>
                   <b>Configuration</b><br>
-                  Host <?php echo $_SERVER['HTTP_HOST'].'@'.$_SERVER['SERVER_ADDR']; ?><br>
+                  Host <?php echo (isset($_SERVER['HTTP_HOST'])?$_SERVER['HTTP_HOST']:'').'@'.(isset($_SERVER['SERVER_ADDR'])?$_SERVER['SERVER_ADDR']:''); ?><br>
                   Path <?php echo substr(plugin_dir_path( __FILE__ ),-34);?><br>
                   WP <?php echo $wp_version; if(is_multisite()) echo 'multi'; ?><br>
                   PHP <?php echo phpversion();?><br>
@@ -818,6 +820,7 @@ function wac_sess() {
     if(isset($cookies[1])) return sanitize_text_field($cookies[1]);
   }
   return sanitize_text_field($_SERVER['REMOTE_ADDR']);
+  return isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field($_SERVER['REMOTE_ADDR']):'';
 }
 
 function wac_cache_coupon($coupon='') {
@@ -871,7 +874,7 @@ function wac_style_coupons() {
     $coupon_code=strtolower(str_replace(' ','-',$coupon_code));
     if($p) {
       $prefix=$p[0]->prefix;
-      if($prefix!=='Coupon:') { ?><script type='text/javascript'>
+      if(strlen($prefix)>0 && $prefix!=='Coupon:') { ?><script type='text/javascript'>
         setTimeout(function(){wac_style_cpn(<?php echo "'$prefix','$coupon_code'";?>);},1000);
         setTimeout(function(){
           var instance=0;
