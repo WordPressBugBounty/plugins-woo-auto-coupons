@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.39
+Version: 3.0.40
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.1
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.39';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.40';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -766,10 +766,10 @@ function wac_apply_coupons() {
       $apply_type='';
       if(!empty($individual_use)) $apply_indv=$coupon_code; 
       if($c->apply=='_wc_auto_apply') $apply_type=' Auto-';
-      if($c->apply=='_wc_auto_apply' || stripos($c->apply,'url')!==false) array_push($coupon_codes,$coupon_code); // Style line item
+      if(!empty($c->apply) && ($c->apply=='_wc_auto_apply' || stripos($c->apply,'url')!==false)) array_push($coupon_codes,$coupon_code); // Style line item
       if($trb>0) $reason.="{$apply_type}Applied successfully $individual_use";
     } elseif($valid>0) {
-      if(stripos($c->apply,'url')!==false) {$apply_type.=' or URL'; array_push($coupon_codes,$coupon_code);} // Style line item
+      if(!empty($c->apply) && stripos($c->apply,'url')!==false) {$apply_type.=' or URL'; array_push($coupon_codes,$coupon_code);} // Style line item
       if($trb>0) {
 		  $apply_type=' via manual entry';
 		  $reason.="Eligible $apply_type. $individual_use";
