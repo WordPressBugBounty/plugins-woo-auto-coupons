@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.40
+Version: 3.0.42
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 WC requires at least: 9.0
-WC tested up to: 10.1
+WC tested up to: 10.2
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.40';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.42';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -824,14 +824,24 @@ function wac_cart_coupon() {
 if(isset($_POST['coupon_code'])) wac_cart_coupon();  // WC Apply
 
 
-function wac_sess() {
-  if(isset($_SERVER['HTTP_COOKIE'])) {
-    $cookies=explode(';',$_SERVER['HTTP_COOKIE']);
-    if(isset($cookies[1])) return sanitize_text_field($cookies[1]);
-  }
-  return sanitize_text_field($_SERVER['REMOTE_ADDR']);
-  return isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field($_SERVER['REMOTE_ADDR']):'';
+function wac_ip(){
+	static $ip=null;
+	if($ip!==null)return $ip;
+	if(isset($_SERVER['HTTP_CF_CONNECTING_IP']))return $ip=sanitize_text_field($_SERVER['HTTP_CF_CONNECTING_IP']);
+	if(isset($_SERVER['HTTP_X_FORWARDED_FOR'])){list($ip)=explode(',',$_SERVER['HTTP_X_FORWARDED_FOR']);return $ip=sanitize_text_field(trim($ip));}
+	if(isset($_SERVER['HTTP_X_REAL_IP']))return $ip=sanitize_text_field($_SERVER['HTTP_X_REAL_IP']);
+	return $ip=sanitize_text_field($_SERVER['REMOTE_ADDR']);
 }
+
+function wac_sess(){
+  if(!empty($_SERVER['HTTP_COOKIE'])){
+    $cookies=explode(';',$_SERVER['HTTP_COOKIE']);
+    if(!empty($cookies[1]))return sanitize_text_field($cookies[1]);
+  }
+  $id=(wac_ip()??'').($_SERVER['HTTP_USER_AGENT']??'');
+  return substr(md5($id),0,16);
+}
+
 
 function wac_cache_coupon($coupon='') {
   $sess=wac_sess();
