@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.42
+Version: 3.0.43
 Text Domain: woo-auto-coupons
-Copyright: (c) 2019-2025 rldd.net - All Rights Reserved
+Copyright: (c) 2019-2026 rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 WC requires at least: 9.0
 WC tested up to: 10.2
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.42';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.43';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -670,8 +670,8 @@ function wac_apply_coupons() {
 
     $wc_qty_ntf=wac_unsr($c->qty_ntf);
     if(empty($wc_qty_ntf)) $wc_qty_ntf=array(1,-1);
-    $wc_min_ntf=$wc_qty_ntf[0];
-    $wc_max_ntf=$wc_qty_ntf[1];
+    $wc_min_ntf=$wc_qty_ntf[0]??1;
+    $wc_max_ntf=$wc_qty_ntf[1]??-1;
     
     if($c->individual=='yes') $individual_use='[Individual Use]';
     if($user_removed_coupon==strtolower($coupon_code)) $valid=wac_is_coupon_valid($coupon_code);
