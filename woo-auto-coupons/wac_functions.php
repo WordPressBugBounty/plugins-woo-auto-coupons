@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.43
+Version: 3.0.44
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2026 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.2
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.43';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.44';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -591,7 +591,7 @@ function wac_apply_coupons() {
   $cart=$woocommerce->cart;
   if(isset($_POST['wac_reset_cache']) && intval($_POST['wac_reset_cache'])>0) wac_clear_cache();
   $cart_items=$apply_indv=$disp_email_prompt=$email_match=0;
-  $req=$req2=$coupon=$cart_email=$wac_email='';
+  $reqs=$exp=$coupon=$cart_email=$wac_email='';
   $meta='_wc_%_apply';
   $cart_qty=$woocommerce->cart->get_cart_contents_count();
   if(is_object($woocommerce->session) && $woocommerce->session->get('customer')) {$c=$woocommerce->session->get('customer'); if(isset($c['email'])) $cart_email=$c['email'];}
@@ -616,8 +616,10 @@ function wac_apply_coupons() {
   $now=current_time('mysql');
 
   if($trb<1) {
-    $req2.=" AND(individual='yes' OR apply IS NOT NULL OR c_email IS NOT NULL)";
-    $req.=" AND exp=0";
+    $reqs.=" AND(individual='yes' OR apply IS NOT NULL";
+    if(function_exists('wac_email_prompt')&&$coupon_email>0)$reqs.=" OR c_email IS NOT NULL";
+    $reqs.=")";
+    $exp.=" AND IFNULL(FROM_UNIXTIME(x.meta_value),'9999-12-31')>'$now'";
   }
 
   $coupons=wac_r("
@@ -642,16 +644,15 @@ function wac_apply_coupons() {
       ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
       FROM wp_posts p
       LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
-      LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID 
-      AND (pm.meta_key IN ('product_ids','exclude_product_ids','product_categories','exclude_product_categories','individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_qty_ntf','_wc_min_qty_ntf','_wc_max_qty_ntf')
+      LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID AND (pm.meta_key IN ('product_ids','exclude_product_ids','product_categories','exclude_product_categories','individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_qty_ntf','_wc_min_qty_ntf','_wc_max_qty_ntf')
       OR pm.meta_key LIKE '_wc_%_apply')
       WHERE post_type='shop_coupon'
       AND post_status='publish'
+      $exp
       GROUP BY p.ID
     )a
     WHERE 1=1
-    $req2
-    $req
+    $reqs
     ORDER BY individual DESC,exp,CAST(coupon_amount AS SIGNED) DESC;");
   if(!$coupons)return;
 
