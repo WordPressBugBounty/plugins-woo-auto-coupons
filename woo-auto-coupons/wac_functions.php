@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.44
+Version: 3.0.45
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2026 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.2
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.44';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.45';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -187,13 +187,13 @@ function wac_adminMenu() {
         FROM wp_posts p
         LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
         LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID
-				AND (pm.meta_key IN ('product_ids','exclude_product_ids','product_categories','exclude_product_categories','individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_qty_ntf','_wc_min_qty_ntf','_wc_max_qty_ntf')
-				OR pm.meta_key LIKE '_wc_%_apply')
+        AND (pm.meta_key IN ('individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_min_qty_ntf','_wc_max_qty_ntf')
+        OR pm.meta_key IN ('_wc_auto_apply','_wc_url_apply'))
         WHERE post_type='shop_coupon'
         AND post_status='publish'
+        AND IFNULL(FROM_UNIXTIME(x.meta_value),'9999-12-31')>'$now'
         GROUP BY p.ID
       )a
-      WHERE exp=0
       ORDER BY coupon_code;");
 
       function wac_ct_coupons($coupons,$type) {
@@ -612,7 +612,7 @@ function wac_apply_coupons() {
   if(isset($_GET['wac_trb']) && current_user_can('administrator') && !wp_doing_ajax()) $trb=1; else $trb=0;
 
   $coupon=wac_cache_coupon();
-  if(!empty($coupon)) $req.=" AND coupon_code='$coupon'";
+  if(!empty($coupon)) $reqs.=" AND coupon_code='$coupon'";
   $now=current_time('mysql');
 
   if($trb<1) {
