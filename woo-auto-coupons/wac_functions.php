@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.47
+Version: 3.0.48
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2026 rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 WC requires at least: 9.0
-WC tested up to: 10.7
+WC tested up to: 10.8
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.47';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.48';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -168,7 +168,7 @@ function wac_adminMenu() {
       </div>";
     }
 
-    $now=current_time('mysql');
+    $now=time();
     $coupons=wac_r("
       SELECT *
         FROM (
@@ -183,7 +183,7 @@ function wac_adminMenu() {
         ,MAX(CASE WHEN pm.meta_key='_wc_auto_apply' AND pm.meta_value='yes' THEN pm.meta_value END)auto_apply
         ,MAX(CASE WHEN pm.meta_key='_wc_url_apply' AND pm.meta_value='yes' THEN pm.meta_value END)url_apply
         ,DATE_FORMAT(FROM_UNIXTIME(x.meta_value),'%m-%d-%Y')exp_date
-        ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
+        ,CASE WHEN x.meta_value IS NOT NULL AND x.meta_value<$now THEN 1 ELSE 0 END exp
         FROM wp_posts p
         LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
         LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID
@@ -191,7 +191,7 @@ function wac_adminMenu() {
         OR pm.meta_key IN ('_wc_auto_apply','_wc_url_apply'))
         WHERE post_type='shop_coupon'
         AND post_status='publish'
-        AND IFNULL(FROM_UNIXTIME(x.meta_value),'9999-12-31')>'$now'
+        AND (x.meta_value IS NULL OR x.meta_value>$now)
         GROUP BY p.ID
       )a
       ORDER BY coupon_code;");
@@ -613,13 +613,13 @@ function wac_apply_coupons() {
 
   $coupon=wac_cache_coupon();
   if(!empty($coupon)) $reqs.=" AND coupon_code='$coupon'";
-  $now=current_time('mysql');
+  $now=time();
 
   if($trb<1) {
     $reqs.=" AND(individual='yes' OR apply IS NOT NULL";
     if(function_exists('wac_email_prompt')&&$coupon_email>0)$reqs.=" OR c_email IS NOT NULL";
     $reqs.=")";
-    $exp.=" AND IFNULL(FROM_UNIXTIME(x.meta_value),'9999-12-31')>'$now'";
+    $exp.=" AND (x.meta_value IS NULL OR x.meta_value>$now)";
   }
 
   $coupons=wac_r("
@@ -641,7 +641,7 @@ function wac_apply_coupons() {
       ,MAX(CASE WHEN pm.meta_key='_wc_max_qty_ntf' THEN pm.meta_value END)max_qty_ntf
       ,MIN(CASE WHEN pm.meta_key LIKE '$meta' AND pm.meta_value='yes' THEN pm.meta_key END)apply
       ,DATE_FORMAT(FROM_UNIXTIME(x.meta_value),'%m-%d-%Y')exp_date
-      ,CASE WHEN FROM_UNIXTIME(x.meta_value)<'$now' THEN 1 ELSE 0 END exp
+      ,CASE WHEN x.meta_value IS NOT NULL AND x.meta_value<$now THEN 1 ELSE 0 END exp
       FROM wp_posts p
       LEFT JOIN wp_postmeta x ON x.post_id=p.ID AND x.meta_key='date_expires' AND LENGTH(x.meta_value)=10 AND x.meta_value REGEXP '[0-9]'
       LEFT JOIN wp_postmeta pm ON pm.post_id=p.ID AND (pm.meta_key IN ('product_ids','exclude_product_ids','product_categories','exclude_product_categories','individual_use','coupon_amount','customer_email','_wc_min_qty','_wc_max_qty','_wc_qty_ntf','_wc_min_qty_ntf','_wc_max_qty_ntf')
