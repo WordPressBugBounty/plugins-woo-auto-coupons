@@ -6,7 +6,7 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.48
+Version: 3.0.49
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2026 rldd.net - All Rights Reserved
 License: GPLv3 or later
@@ -15,7 +15,7 @@ WC requires at least: 9.0
 WC tested up to: 10.8
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.48';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.49';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -737,14 +737,16 @@ function wac_apply_coupons() {
       if($valid<1) wac_removed_coupon(); // uncache coupon if invalid
       if($valid>0) {
         $valid=0;
-        $reason.=" Cannot re-auto-apply.
-        <div style='font-size:.8em'>Previously removed from the cart manually. Reset cache to auto apply.
+        if($trb>0) $reason.=" Cannot re-auto-apply. Previously removed from the cart manually.";
+        if(empty($cart->applied_coupons)) echo "
+        <div class='woocommerce-message wac'>
+          <b>$coupon_code</b> was previously removed.
           <form method='post' style='display:inline'>
             <input type='hidden' name='wac_reset_cache' value=1>
-            <input type='button' class='button' style='outline:none' onclick=this.form.submit(); value='Reset Cache'>
+            <input type='submit' class='button' style='outline:none;margin-left:.5em' value='Undo'>
           </form>
         </div>";
-        if($trb<1) continue;
+        continue;
       }
     }
 
