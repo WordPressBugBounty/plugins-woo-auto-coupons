@@ -6,16 +6,16 @@ Description: Apply WooCommerce Coupons automatically with a simple, fast and lig
 Author: RLDD
 Author URI: https://richardlerma.com/contact/
 Requires Plugins: woocommerce
-Version: 3.0.49
+Version: 3.1.0
 Text Domain: woo-auto-coupons
 Copyright: (c) 2019-2026 rldd.net - All Rights Reserved
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
-WC requires at least: 9.0
-WC tested up to: 10.8
+WC requires at least: 10.0
+WC tested up to: 11.1
 */
 
-global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.0.49';
+global $wp_version,$wac_version,$wac_pro_version,$wac_version_type; $wac_version='3.1.0';
 $wac_version_type='GPL';
 $wac_pro_version=get_option('wac_pro_version');
 if(function_exists('wac_pro_activate')) $wac_version_type='PRO';
@@ -132,6 +132,7 @@ function wac_adminMenu() {
       $email_dismiss=sanitize_text_field($_POST['email_dismiss']); update_option('wac_email_dismiss',$email_dismiss);
       $min_qty_ntf=sanitize_text_field($_POST['min_qty_ntf']); update_option('wac_min_qty_ntf',$min_qty_ntf);
       $max_qty_ntf=sanitize_text_field($_POST['max_qty_ntf']); update_option('wac_max_qty_ntf',$max_qty_ntf);
+      $removed_ntf=sanitize_text_field($_POST['removed_ntf']); update_option('wac_removed_ntf',$removed_ntf);
       $uninstall=sanitize_text_field($_POST['wac_uninstall']); update_option('wac_uninstall',$uninstall);
       $sc_cart=sanitize_text_field($_POST['sc_cart']); update_option('wac_sc_cart',$sc_cart);
     } else {
@@ -143,6 +144,7 @@ function wac_adminMenu() {
       $email_dismiss=get_option('wac_email_dismiss');
       $min_qty_ntf=get_option('wac_min_qty_ntf');
       $max_qty_ntf=get_option('wac_max_qty_ntf');
+      $removed_ntf=get_option('wac_removed_ntf');
       $uninstall=get_option('wac_uninstall');
       $sc_cart=get_option('wac_sc_cart');
     }
@@ -361,6 +363,14 @@ function wac_adminMenu() {
               <td>Default Notifications</td>
               <td class='items'>
                 <div style='background:#fff'>
+                  <span>When an auto-applied coupon was previously removed from the cart.</span>
+                  <div style='background:#eee;margin:1em 0;width:fit-content'>
+                    &#8226; <b>Variable</b>: {Coupon}<br>
+                    &#8226; <b>Default</b>: {Coupon} was previously removed.
+                  </div>
+                  <input type='text' style='width:100%' name='removed_ntf' placeholder='{Coupon} was previously removed.' value='<?php echo esc_attr($removed_ntf);?>'>
+                </div>
+                <div>
                   <span title='These are defaults. Notifications are only active when enabled on the coupon level.'><span class="dashicons dashicons-editor-help"></span> When quantity in cart is <b>less</b> than min quantity of coupon.</span>
                   <div style='background:#eee;margin:1em 0;width:fit-content'>
                     &#8226; <b>Variables</b>: {Product} {Min Qty} {Qty Diff}<br>
@@ -368,7 +378,7 @@ function wac_adminMenu() {
                   </div>
                   <input type='text' style='width:100%' name='min_qty_ntf' placeholder='Add {Qty Diff} more {Product} to qualify for a discount.' value='<?php echo $min_qty_ntf;?>'>
                 </div>
-                <div>
+                <div style='background:#fff'>
                   <span title='These are defaults. Notifications are only active when enabled on the coupon level.'><span class="dashicons dashicons-editor-help"></span> When quantity in cart is <b>more</b> than max quantity of coupon.</span>
                   <div style='background:#eee;margin:1em 0;width:fit-content'>
                     &#8226; <b>Variables</b>: {Product} {Max Qty} {Qty Diff}<br>
@@ -422,6 +432,7 @@ function wac_adminMenu() {
                   Email Dismiss: <?php echo $email_dismiss;?><br>
                   Min Default: <?php echo $min_qty_ntf;?><br>
                   Max Default: <?php echo $max_qty_ntf;?><br>
+                  Removed Default: <?php echo $removed_ntf;?><br>
                   Uninstall: <?php if(empty($uninstall)) echo 'keep'; else echo $uninstall;?><br>
                   Shortcode Cart: <?php if(!empty($sc_cart)) echo 'yes';?><br>
                 </div>
@@ -607,6 +618,7 @@ function wac_apply_coupons() {
   $email_dismiss=get_option('wac_email_dismiss'); if(empty($email_dismiss)) $email_dismiss='Are you sure you want to dismiss?';
   $min_qty_ntf=get_option('wac_min_qty_ntf'); if(empty($min_qty_ntf)) $min_qty_ntf="Add {Qty Diff} more {Product} to qualify for a discount.";
   $max_qty_ntf=get_option('wac_max_qty_ntf'); if(empty($max_qty_ntf)) $max_qty_ntf="Reduce {Product} quantity to {Max Qty} to qualify for a discount.";
+  $removed_ntf=get_option('wac_removed_ntf'); if(empty($removed_ntf)) $removed_ntf=__("{Coupon} was previously removed.",'woo-auto-coupons');
 
   ob_start();
   if(isset($_GET['wac_trb']) && current_user_can('administrator') && !wp_doing_ajax()) $trb=1; else $trb=0;
@@ -654,7 +666,7 @@ function wac_apply_coupons() {
     WHERE 1=1
     $reqs
     ORDER BY individual DESC,exp,CAST(coupon_amount AS SIGNED) DESC;");
-  if(!$coupons)return;
+  if(!$coupons){ob_end_clean();return;}
 
 
   $user_removed_coupon=wac_get_removed_coupon();
@@ -738,14 +750,18 @@ function wac_apply_coupons() {
       if($valid>0) {
         $valid=0;
         if($trb>0) $reason.=" Cannot re-auto-apply. Previously removed from the cart manually.";
-        if(empty($cart->applied_coupons)) echo "
-        <div class='woocommerce-message wac'>
-          <b>$coupon_code</b> was previously removed.
-          <form method='post' style='display:inline'>
-            <input type='hidden' name='wac_reset_cache' value=1>
-            <input type='submit' class='button' style='outline:none;margin-left:.5em' value='Undo'>
-          </form>
-        </div>";
+        if(empty($cart->applied_coupons)) {
+          $ntf=str_ireplace('{Coupon}',"<b>".esc_html($coupon_code)."</b>",$removed_ntf);
+          $undo=__('Undo','woo-auto-coupons');
+          echo "
+          <div class='woocommerce-message wac'>
+            $ntf
+            <form method='post' style='display:inline'>
+              <input type='hidden' name='wac_reset_cache' value=1>
+              <input type='submit' class='button' style='outline:none;margin-left:.5em' value='".esc_attr($undo)."'>
+            </form>
+          </div>";
+        }
         continue;
       }
     }
@@ -792,9 +808,9 @@ function wac_apply_coupons() {
     echo wac_email_prompt($prompt,$email_dismiss,$wac_email);
     if(wac_is_path('checkout') && !empty($wac_email) && empty($cart_email)) if(function_exists('wac_prefill_email')) add_action('wp_footer',function()use($wac_email){wac_prefill_email($wac_email);});
   }
+  $output=ob_get_clean();
   if(!wp_doing_ajax() && !did_action('woocommerce_add_to_cart')) {
     add_action('wp_footer','wac_style_coupons');
-    $output=ob_get_clean();
     add_action('the_content',function($content) use ($output) {return $output.$content;});
   }
 }
